@@ -2,6 +2,9 @@
 This project was developed as part of an academic dissertation exploring real-world PQC readiness in blockchain systems, with the purpose of evaluating the impact of post-quantum signature schemes on blockchain scalability and performance.
 
 
+-----------------------------------------------------------------
+
+
 **Post-Quantum Signature Impact on Blockchain (Bitcoin Simulation)
 **
 This repository presents a simulation-based study on the real-world impact of integrating post-quantum cryptographic (PQC) digital signature schemes CRYSTALS-Dilithium and Falcon within Bitcoin transactions.
@@ -10,6 +13,8 @@ Built using Python and real transaction data (~65,000 transactions), the analysi
 -Throughput (transactions per block)
 -Verification delays
 
+
+-----------------------------------------------------------------
 
 **Project Features
 **
@@ -24,15 +29,23 @@ Output graphs and stats for:
 
 
 
+-----------------------------------------------------------------
 ****Repository Structure
 **
 ├── data/
 │ └── bitcoin_transactions.csv # Cleaned transaction dataset
+
 ├── main.py # Core simulation and analysis script
+
 ├── plots/ # Generated graphs
+
 ├── README.md # Project description
+
 └── requirements.txt # Required Python libraries**
 
+
+
+-----------------------------------------------------------------
 
 **Requirements
 **
@@ -43,8 +56,14 @@ pandas
 matplotlib
 numpy
 
+-----------------------------------------------------------------
+
+
 **Run the Simulation
 python main.py
+
+-----------------------------------------------------------------
+
 
 **Outputs:
 Summary of PQC impact on Bitcoin block capacity
