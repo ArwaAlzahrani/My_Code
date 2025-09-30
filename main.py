@@ -13,7 +13,6 @@ os.makedirs(data_dir, exist_ok=True)
 os.makedirs(plots_dir, exist_ok=True)
 
 # === Load transaction data ===
-# If you're using real data, make sure the file exists in the data directory
 input_path = os.path.join(data_dir, input_filename)
 
 if os.path.exists(input_path):
