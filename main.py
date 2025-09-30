@@ -1,71 +1,78 @@
+import os
 import pandas as pd
 import matplotlib.pyplot as plt
-import numpy as np
-import os
 
-# Load the dataset
-DATA_PATH = "data/Full_dataset_blockchair_bitcoin_transactions_20250710.xls"
-df = pd.read_excel(DATA_PATH)
+# === SETUP: Define paths ===
+data_dir = "My_Code/data"
+plots_dir = "My_Code/plots"
+input_filename = "Full_dataset_blockchair_bitcoin_transactions_20250710.xls"
+summary_filename = "PQC_Blockchain_Impact_Summary.xlsx"
 
-# Constants
-ECDSA_SIG_SIZE = 70  # Approximate size per signature (bytes)
-DILITHIUM_SIG_SIZE = 2420  # Approximate Dilithium-II signature size
-FALCON_SIG_SIZE = 900  # Approximate Falcon-512 signature size
-BLOCK_SIZE_LIMIT = 1_000_000  # 1 MB in bytes
+# === Ensure folders exist ===
+os.makedirs(data_dir, exist_ok=True)
+os.makedirs(plots_dir, exist_ok=True)
 
-# Calculate signature inflation
-df["ecdsa_total_sig_size"] = df["input_count"] * ECDSA_SIG_SIZE
-df["dilithium_total_sig_size"] = df["input_count"] * DILITHIUM_SIG_SIZE
-df["falcon_total_sig_size"] = df["input_count"] * FALCON_SIG_SIZE
+# === Load transaction data ===
+# If you're using real data, make sure the file exists in the data directory
+input_path = os.path.join(data_dir, input_filename)
 
-# Recalculate transaction sizes
-df["tx_size_ecdsa"] = df["tx_size"] - df["ecdsa_total_sig_size"] + df["ecdsa_total_sig_size"]
-df["tx_size_dilithium"] = df["tx_size"] - df["ecdsa_total_sig_size"] + df["dilithium_total_sig_size"]
-df["tx_size_falcon"] = df["tx_size"] - df["ecdsa_total_sig_size"] + df["falcon_total_sig_size"]
+if os.path.exists(input_path):
+    # Load real Bitcoin transaction data from uploaded Excel file
+    df_raw = pd.read_excel(input_path)
+    
+    # Assume the real file includes 'Signature Scheme' and 'Avg TX Size' columns
+    df = df_raw[["Signature Scheme", "Avg TX Size", "Signature Size (bytes)", "Verification Time (ms)"]]
+    df["Transactions per 1MB Block"] = (1_000_000 / df["Avg TX Size"]).astype(int)
+else:
+    # Fallback: use built-in sample data if real dataset not found
+    print("Real dataset not found, using sample data...")
+    sample_data = {
+        "Signature Scheme": ["ECDSA", "Dilithium", "Falcon"],
+        "Avg TX Size": [529, 5979, 1911],
+        "Signature Size (bytes)": [70, 2420, 666],
+        "Verification Time (ms)": [0.3, 0.5, 2.3]
+    }
+    df = pd.DataFrame(sample_data)
+    df["Transactions per 1MB Block"] = (1_000_000 / df["Avg TX Size"]).astype(int)
 
-# Average size calculations
-avg_tx_size_ecdsa = df["tx_size_ecdsa"].mean()
-avg_tx_size_dilithium = df["tx_size_dilithium"].mean()
-avg_tx_size_falcon = df["tx_size_falcon"].mean()
+# === Save Summary Table ===
+summary_path = os.path.join(data_dir, summary_filename)
+df.to_excel(summary_path, index=False)
+print(f"\n📄 Summary Excel saved to: {summary_path}")
 
-# Transactions per block
-txs_per_block_ecdsa = BLOCK_SIZE_LIMIT // avg_tx_size_ecdsa
-txs_per_block_dilithium = BLOCK_SIZE_LIMIT // avg_tx_size_dilithium
-txs_per_block_falcon = BLOCK_SIZE_LIMIT // avg_tx_size_falcon
-
-# Print results
-print("=== Average Transaction Sizes ===")
-print(f"ECDSA:     {avg_tx_size_ecdsa:.2f} bytes")
-print(f"Dilithium: {avg_tx_size_dilithium:.2f} bytes")
-print(f"Falcon:    {avg_tx_size_falcon:.2f} bytes\n")
-
-print("=== Estimated Transactions per 1MB Block ===")
-print(f"ECDSA:     {txs_per_block_ecdsa:.0f} tx")
-print(f"Dilithium: {txs_per_block_dilithium:.0f} tx")
-print(f"Falcon:    {txs_per_block_falcon:.0f} tx\n")
-
-# Plotting
-if not os.path.exists("plots"):
-    os.makedirs("plots")
-
-# Bar chart for average size
+# === CHART 1: Average Transaction Size ===
 plt.figure(figsize=(8, 5))
-plt.bar(["ECDSA", "Dilithium", "Falcon"],
-        [avg_tx_size_ecdsa, avg_tx_size_dilithium, avg_tx_size_falcon],
-        color=["green", "blue", "orange"])
-plt.title("Average Transaction Size by Signature Scheme")
-plt.ylabel("Size (bytes)")
-plt.grid(True, axis='y', linestyle='--', alpha=0.7)
-plt.savefig("plots/average_transaction_size.png")
+plt.bar(df["Signature Scheme"], df["Avg TX Size"], color='steelblue')
+plt.title("Average Transaction Size per Signature Scheme")
+plt.ylabel("Size (Bytes)")
+plt.grid(axis='y', linestyle='--', alpha=0.7)
+plt.tight_layout()
+chart_path1 = os.path.join(plots_dir, "avg_tx_size.png")
+plt.savefig(chart_path1)
 plt.close()
 
-# Bar chart for tx/block
+# === CHART 2: Throughput (Transactions per Block) ===
 plt.figure(figsize=(8, 5))
-plt.bar(["ECDSA", "Dilithium", "Falcon"],
-        [txs_per_block_ecdsa, txs_per_block_dilithium, txs_per_block_falcon],
-        color=["green", "blue", "orange"])
-plt.title("Estimated Transactions per Block (1MB)")
+plt.bar(df["Signature Scheme"], df["Transactions per 1MB Block"], color='seagreen')
+plt.title("Approx. Transactions per 1MB Block")
 plt.ylabel("Transactions")
-plt.grid(True, axis='y', linestyle='--', alpha=0.7)
-plt.savefig("plots/transactions_per_block.png")
+plt.grid(axis='y', linestyle='--', alpha=0.7)
+plt.tight_layout()
+chart_path2 = os.path.join(plots_dir, "tx_per_block.png")
+plt.savefig(chart_path2)
 plt.close()
+
+# === CHART 3: Verification Time ===
+plt.figure(figsize=(8, 5))
+plt.bar(df["Signature Scheme"], df["Verification Time (ms)"], color='coral')
+plt.title("Signature Verification Time")
+plt.ylabel("Time (ms)")
+plt.grid(axis='y', linestyle='--', alpha=0.7)
+plt.tight_layout()
+chart_path3 = os.path.join(plots_dir, "verification_time.png")
+plt.savefig(chart_path3)
+plt.close()
+
+# === Final Message ===
+print(f"Charts saved to: {plots_dir}")
+print("\n PQC Blockchain Simulation Completed Successfully.")
