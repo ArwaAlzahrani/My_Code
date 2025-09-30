@@ -9,7 +9,7 @@ df = pd.read_excel(DATA_PATH)
 
 # Constants
 ECDSA_SIG_SIZE = 70  # Approximate size per signature (bytes)
-DILITHIUM_SIG_SIZE = 2420  # Approximate Dilithium-III signature size
+DILITHIUM_SIG_SIZE = 2420  # Approximate Dilithium-II signature size
 FALCON_SIG_SIZE = 900  # Approximate Falcon-512 signature size
 BLOCK_SIZE_LIMIT = 1_000_000  # 1 MB in bytes
 
